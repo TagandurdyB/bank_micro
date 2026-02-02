@@ -115,7 +115,7 @@ sudo docker compose run --rm proto-gen
 sudo docker compose --profile infra up -d
 ```
 
-##⚙️ Build & Run All Microservices
+## ⚙️ Build & Run All Microservices
 ```bash
 sudo docker compose --profile runtime up -d
 ```
