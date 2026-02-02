@@ -1,0 +1,9 @@
+version: v2
+modules:
+  - path: proto
+    name: buf.build/user/bank_micro
+deps:
+  - buf.build/googleapis/googleapis
+lint:
+  use:
+    - DEFAULT

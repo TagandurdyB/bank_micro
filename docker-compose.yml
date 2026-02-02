@@ -1,0 +1,145 @@
+services:
+  # ---------------- INFRA ----------------
+  postgres:
+    image: postgres:17-alpine
+    container_name: ${PRJ_NAME}-postgres
+    restart: always
+    profiles: [ "infra", "runtime" ]
+    networks:
+      - internal
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d account_db" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "${LOCAL_POSTGRES_PORT}:${POSTGRES_PORT}"
+    volumes:
+      - ${LOCAL_VOLUME_PATH}/postgres_data:/var/lib/postgresql/data
+      - ${LOCAL_VOLUME_PATH}/init-db.sql:/docker-entrypoint-initdb.d/init.sql
+
+  redis:
+    image: redis:7.4-alpine
+    container_name: ${PRJ_NAME}-redis
+    restart: always
+    profiles: [ "infra", "runtime" ]
+    networks:
+      - internal
+    ports:
+      - "${LOCAL_REDIS_PORT}:${REDIS_PORT}"
+
+  rabbitmq:
+    image: rabbitmq:4.0-management-alpine
+    container_name: ${PRJ_NAME}-rabbitmq
+    restart: always
+    profiles: [ "infra", "runtime" ]
+    networks:
+      - internal
+    ports:
+      - "${LOCAL_RABBITMQ_PORT}:${RABBITMQ_PORT}"
+      - "${LOCAL_RABBITMQ_UI}:${RABBITMQ_UI}"
+
+  # ---------------- PROTO TOOLING ----------------
+  proto-gen:
+    image: ${BUFBUILD_IMAGE}:${BUFBUILD_VERSION}
+    container_name: ${PRJ_NAME}-proto-gen
+    profiles: [ "tools" ]
+    networks:
+      - internal
+    build:
+      context: .
+      dockerfile: docker/proto.Dockerfile
+    volumes:
+      - .:/workspace
+    command: generate --template buf.gen.yaml
+    working_dir: /workspace
+
+  # ---------------- BUILDER ----------------
+  go-builder:
+    image: ${BUILDER_IMAGE}:${BUILDER_VERSION}
+    container_name: ${PRJ_NAME}-builder
+    profiles: [ "builder" ]
+    networks:
+      - internal
+    build:
+      context: .
+      dockerfile: docker/builder.Dockerfile
+    # volumes:
+    #   - ${LOCAL_VOLUME_PATH}/vendor:/app/vendor
+    command: [ "sleep", "infinity" ]
+
+  # ---------------- RUNTIME ----------------
+  api-gateway:
+    container_name: ${PRJ_NAME}-api-gateway
+    build:
+      context: .
+      dockerfile: docker/api-gateway.Dockerfile
+    restart: always
+    profiles: [ "runtime" ]
+    networks:
+      - internal
+    ports:
+      - "${LOCAL_API_PORT}:${API_PORT}"
+    environment:
+      - ACCOUNT_SERVICE_GRPC_ADDR=account-service:${GRPC_PORT_1}
+      - TRANSACTION_SERVICE_GRPC_ADDR=transaction-service:${GRPC_PORT_2}
+      - LOCAL_API_PORT=${API_PORT}
+      - IS_DOCKER=true
+    depends_on:
+      - account-service
+      - transaction-service
+
+  account-service:
+    container_name: ${PRJ_NAME}-account-service
+    build:
+      context: .
+      dockerfile: docker/account.Dockerfile
+    restart: always
+    profiles: [ "runtime" ]
+    networks:
+      - internal
+    expose:
+      - "${GRPC_PORT_1}"
+    environment:
+      - DB_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${PRJ_NAME}-postgres:${POSTGRES_PORT}/account_db?sslmode=disable
+      - REDIS_ADDR=${PRJ_NAME}-redis:${REDIS_PORT}
+      - RABBITMQ_URL=amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@${PRJ_NAME}-rabbitmq:${RABBITMQ_PORT}/
+      - GRPC_PORT=${GRPC_PORT_1}
+      - IS_DOCKER=true
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
+
+  transaction-service:
+    container_name: ${PRJ_NAME}-transaction-service
+    build:
+      context: .
+      dockerfile: docker/transaction.Dockerfile
+    restart: always
+    profiles: [ "runtime" ]
+    networks:
+      - internal
+    expose:
+      - "${GRPC_PORT_2}"
+    environment:
+      - DB_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${PRJ_NAME}-postgres:${POSTGRES_PORT}/transaction_db?sslmode=disable
+      - RABBITMQ_URL=amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@${PRJ_NAME}-rabbitmq:${RABBITMQ_PORT}/
+      - ACCOUNT_SERVICE_GRPC_ADDR=account-service:${GRPC_PORT_1}
+      - GRPC_PORT=${GRPC_PORT_2}
+      - IS_DOCKER=true
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+
+networks:
+  internal:
+    driver: bridge

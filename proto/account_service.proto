@@ -1,0 +1,112 @@
+syntax = "proto3";
+
+package account;
+
+option go_package = "bank_micro/gen";
+
+import "google/protobuf/timestamp.proto";
+import "google/api/annotations.proto";
+
+// AccountService handles all bank account related operations.
+service AccountService {
+  // CreateAccount creates a new bank account with the given currency and initial balance.
+  rpc CreateAccount(CreateAccountRequest) returns (AccountResponse) {
+    option (google.api.http) = {
+      post: "/api/account/create"
+      body: "*"
+    };
+  }
+
+  // GetAccount retrieves a single account's details by its unique ID.
+  rpc GetAccount(GetAccountRequest) returns (AccountResponse) {
+    option (google.api.http) = {
+      get: "/api/account/{id}"
+    };
+  }
+
+// GetAllAccounts returns all accounts
+  rpc GetAllAccounts(Empty) returns (GetAllAccountsResponse) {
+    option (google.api.http) = {
+      get: "/api/account/all"
+    };
+  }
+
+  // UpdateAccount updates balance/status
+  rpc UpdateAccount(UpdateAccountRequest) returns (AccountResponse) {
+    option (google.api.http) = {
+      put : "/api/account/update"
+      body: "*"
+    };
+  }
+
+  // DeleteAccount soft deletes the account
+  rpc DeleteAccount(DeleteAccountRequest) returns (DeleteAccountResponse) {
+    option (google.api.http) = {
+      delete: "/api/account/{id}"
+    };
+  }
+
+  // Deposit sends money to queue
+  rpc Deposit(DepositRequest) returns (DepositResponse) {
+    option (google.api.http) = {
+      post: "/api/account/deposit"
+      body: "*"
+    };
+  }
+}
+
+// Empty represents a request or response with no fields.
+message Empty {}
+
+// AccountResponse describes the data returned for most account operations.
+message AccountResponse {
+  string                    id         = 1;
+  int64                     balance    = 2;
+  string                    currency   = 3;
+  bool                      is_locked  = 4;
+  google.protobuf.Timestamp created_at = 5;
+}
+
+// CreateAccountRequest is used to provide necessary data for new account creation.
+message CreateAccountRequest {
+  string currency        = 1;
+  int64  initial_balance = 2; // Buff/Go will convert this to InitialBalance
+}
+
+// GetAccountRequest is used to fetch an account by its ID.
+message GetAccountRequest {
+  string id = 1;
+}
+
+// GetAllAccountsResponse contains a list of AccountResponse messages.
+message GetAllAccountsResponse {
+  repeated AccountResponse accounts = 1;
+}
+
+// UpdateAccountRequest provides fields that can be modified on an account.
+message UpdateAccountRequest {
+  string id        = 1;
+  int64  balance   = 2;
+  bool   is_locked = 3;
+}
+
+// DeleteAccountRequest specifies which account should be deleted.
+message DeleteAccountRequest {
+  string id = 1;
+}
+
+// DeleteAccountResponse returns the status of the deletion attempt.
+message DeleteAccountResponse {
+  bool success = 1;
+}
+
+// DepositRequest represents a deposit intent for an account.
+message DepositRequest {
+  string id     = 1;
+  int64  amount = 2;
+}
+
+// DepositResponse returns an immediate acknowledgement message.
+message DepositResponse {
+  string message = 1;
+}

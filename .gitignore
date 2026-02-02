@@ -1,0 +1,33 @@
+# Dependencies
+# Ignore the vendor directory since we can reconstruct it using 'go mod vendor'
+vendor/
+
+# Binaries and executable files
+bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# IDE specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Environment variables
+# NEVER commit your secret .env file to git
+.env
+
+# Docker and OS files
+.docker/
+.DS_Store
+Thumbs.db
+
+# Protobuf generated files (Optional)
+# If you want everyone to generate their own code, uncomment the next line:
+# gen/proto/
+
+# Log files
+*.log
