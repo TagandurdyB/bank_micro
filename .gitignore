@@ -16,9 +16,9 @@ bin/
 *.swp
 *.swo
 
-# Environment variables
-# NEVER commit your secret .env file to git
-.env
+# # Environment variables
+# # NEVER commit your secret .env file to git
+# .env
 
 # Docker and OS files
 .docker/

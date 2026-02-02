@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+
+	"github.com/rabbitmq/amqp091-go"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
@@ -12,7 +14,11 @@ type RabbitMQClient struct {
 	Channel *amqp.Channel
 }
 
-func NewRabbitMQClient(url string) (*RabbitMQClient, error) {
+const (
+	RabbetQueueDeposit = "deposit_queue"
+)
+
+func NewRabbitMQClient(url string, queueName string) (*RabbitMQClient, error) {
 	conn, err := amqp.Dial(url)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to rabbitmq: %w", err)
@@ -25,12 +31,12 @@ func NewRabbitMQClient(url string) (*RabbitMQClient, error) {
 
 	// Create the queue (If Durable: True, messages will not be deleted even if RabbitMQ closes)
 	_, err = ch.QueueDeclare(
-		"deposit_queue", // Queue name
-		true,            // Durable
-		false,           // Auto-delete
-		false,           // Exclusive
-		false,           // No-wait
-		nil,             // Arguments
+		queueName, // Queue nadeposit_queueme
+		true,      // Durable
+		false,     // Auto-delete
+		false,     // Exclusive
+		false,     // No-wait
+		nil,       // Arguments
 	)
 
 	return &RabbitMQClient{Conn: conn, Channel: ch}, err
@@ -56,8 +62,10 @@ func (r *RabbitMQClient) Publish(queueName string, body interface{}) error {
 	)
 }
 
-func (r *RabbitMQClient) Consume() {
-
+func (r *RabbitMQClient) Consume(queueName string) (<-chan amqp091.Delivery, error) {
+	return r.Channel.Consume(
+		queueName, "", true, false, false, false, nil,
+	)
 }
 
 func (r *RabbitMQClient) Close() {

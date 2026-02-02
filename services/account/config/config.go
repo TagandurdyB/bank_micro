@@ -16,9 +16,15 @@ func LoadAccountConfig() {
 
 	host := pkg.GetEnv("HOST", "0.0.0.0")
 	gRPCPort1 := pkg.GetEnv("GRPC_PORT_1", "51051")
+	var accAddr string
+	if pkg.CoreCfg.IsDocker {
+		accAddr = "account-service:" + gRPCPort1
+	} else {
+		accAddr = host + ":" + gRPCPort1
+	}
 
 	Cfg = &AccountConfig{
 		CoreConfig: pkg.CoreCfg,
-		GRPCAddr:   host + ":" + gRPCPort1,
+		GRPCAddr:   accAddr,
 	}
 }

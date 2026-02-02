@@ -11,16 +11,19 @@ COPY go.mod go.sum* ./
 
 # 3. Download dependencies independently (Cacheable layer)
 # This prevents re-downloading unless go.mod or go.sum changes
-#RUN go mod download
+RUN go mod download
 
 # 4. Copy the entire source code (Layer 2)
 COPY . .
 
 # 5. Run tidy and vendor only if the vendor directory is missing
-# RUN if [ ! -d vendor ]; then \
-#   go mod tidy && go mod vendor ; \
-#   fi
+RUN if [ ! -d vendor ]; then \
+  go mod tidy && go mod vendor ; \
+  fi
 RUN go mod verify
+
+# 6. Remove source code
+RUN find . -maxdepth 1 ! -name 'vendor' ! -name 'go.mod' ! -name 'go.sum' ! -name '.' -exec rm -rf {} +
 
 # Keep the container running for development use
 CMD ["sleep", "infinity"]

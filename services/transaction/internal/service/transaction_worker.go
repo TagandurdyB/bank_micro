@@ -24,9 +24,7 @@ func NewTransactionWorker(r *rabbitmq.RabbitMQClient, repo *repository.Transacti
 }
 
 func (w *TransactionWorker) Start() {
-	msgs, err := w.rabbit.Channel.Consume(
-		"deposit_queue", "", true, false, false, false, nil,
-	)
+	msgs, err := w.rabbit.Consume(rabbitmq.RabbetQueueDeposit)
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -19,16 +19,19 @@ func LoadTransactionConfig() {
 	gRPCPort1 := pkg.GetEnv("GRPC_PORT_1", "51051")
 	gRPCPort2 := pkg.GetEnv("GRPC_PORT_2", "51052")
 
-	var accAddr string
+	var accAddr, transAddr string
+	
 	if pkg.CoreCfg.IsDocker {
 		accAddr = "account-service:" + gRPCPort1
+		transAddr = "transaction-service:" + gRPCPort2
 	} else {
 		accAddr = host + ":" + gRPCPort1
+		transAddr = host + ":" + gRPCPort2
 	}
 
 	Cfg = &TransactionConfig{
 		CoreConfig:         pkg.CoreCfg,
 		AccountServiceAddr: accAddr,
-		GRPCAddr:           host + ":" + gRPCPort2,
+		GRPCAddr:           transAddr,
 	}
 }

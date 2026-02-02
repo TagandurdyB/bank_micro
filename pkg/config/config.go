@@ -24,7 +24,7 @@ func LoadConfig(dbName string) {
 	once.Do(func() {
 		loadDotEnv(".env")
 
-		_, isDocker := os.LookupEnv("DB_URL")
+		_, isDocker := os.LookupEnv("IS_DOCKER")
 
 		var dbURL, redisAddr, rabbitURL string
 

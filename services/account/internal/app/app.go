@@ -15,13 +15,13 @@ type Container struct {
 
 func InitDependencies(db *gorm.DB, rabbitURL string) (*Container, error) {
 	// Launch RabbitMQ
-	rabbit, err := rabbitmq.NewRabbitMQClient(rabbitURL)
+	rabbit, err := rabbitmq.NewRabbitMQClient(rabbitURL, rabbitmq.RabbetQueueDeposit)
 	if err != nil {
 		return nil, err
 	}
 
 	repo := repository.NewAccountRepository(db)
-	svc := service.NewAccountService(repo, rabbit) 
+	svc := service.NewAccountService(repo, rabbit)
 	hnd := handler.NewAccountHandler(svc)
 
 	return &Container{

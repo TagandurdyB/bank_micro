@@ -16,7 +16,7 @@ type Container struct {
 }
 
 func InitDependencies(db *gorm.DB, rabbitURL string, accountServiceAddr string) (*Container, error) {
-	rabbit, err := rabbitmq.NewRabbitMQClient(rabbitURL)
+	rabbit, err := rabbitmq.NewRabbitMQClient(rabbitURL, rabbitmq.RabbetQueueDeposit)
 	if err != nil {
 		return nil, err
 	}

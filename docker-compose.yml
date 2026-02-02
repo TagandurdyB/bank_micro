@@ -4,14 +4,14 @@ services:
     image: postgres:17-alpine
     container_name: ${PRJ_NAME}-postgres
     restart: always
-    profiles: [ "infra", "runtime" ]
+    profiles: [ "infra" ]
     networks:
       - internal
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d account_db" ]
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER}" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -25,7 +25,7 @@ services:
     image: redis:7.4-alpine
     container_name: ${PRJ_NAME}-redis
     restart: always
-    profiles: [ "infra", "runtime" ]
+    profiles: [ "infra" ]
     networks:
       - internal
     ports:
@@ -35,7 +35,7 @@ services:
     image: rabbitmq:4.0-management-alpine
     container_name: ${PRJ_NAME}-rabbitmq
     restart: always
-    profiles: [ "infra", "runtime" ]
+    profiles: [ "infra" ]
     networks:
       - internal
     ports:
@@ -77,6 +77,8 @@ services:
     build:
       context: .
       dockerfile: docker/api-gateway.Dockerfile
+      args:
+        BUILDER_IMAGE: ${BUILDER_IMAGE}:${BUILDER_VERSION}
     restart: always
     profiles: [ "runtime" ]
     networks:
@@ -97,6 +99,8 @@ services:
     build:
       context: .
       dockerfile: docker/account.Dockerfile
+      args:
+        BUILDER_IMAGE: ${BUILDER_IMAGE}:${BUILDER_VERSION}
     restart: always
     profiles: [ "runtime" ]
     networks:
@@ -109,19 +113,21 @@ services:
       - RABBITMQ_URL=amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@${PRJ_NAME}-rabbitmq:${RABBITMQ_PORT}/
       - GRPC_PORT=${GRPC_PORT_1}
       - IS_DOCKER=true
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_started
-      rabbitmq:
-        condition: service_started
+    # depends_on:
+    #   postgres:
+    #     condition: service_healthy
+    #   redis:
+    #     condition: service_started
+    #   rabbitmq:
+    #     condition: service_started
 
   transaction-service:
     container_name: ${PRJ_NAME}-transaction-service
     build:
       context: .
       dockerfile: docker/transaction.Dockerfile
+      args:
+        BUILDER_IMAGE: ${BUILDER_IMAGE}:${BUILDER_VERSION}
     restart: always
     profiles: [ "runtime" ]
     networks:
@@ -134,11 +140,11 @@ services:
       - ACCOUNT_SERVICE_GRPC_ADDR=account-service:${GRPC_PORT_1}
       - GRPC_PORT=${GRPC_PORT_2}
       - IS_DOCKER=true
-    depends_on:
-      postgres:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_started
+    # depends_on:
+    #   postgres:
+    #     condition: service_healthy
+    #   rabbitmq:
+    #     condition: service_started
 
 networks:
   internal:

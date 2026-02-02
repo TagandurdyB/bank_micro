@@ -71,7 +71,7 @@ func (s *AccountService) ProcessDeposit(id string, amount int64) (string, error)
 	}
 
 	// 3. Send to RabbitMQ
-	err = s.rabbit.Publish("deposit_queue", event)
+	err = s.rabbit.Publish(rabbitmq.RabbetQueueDeposit, event)
 	if err != nil {
 		return "", err
 	}

@@ -1,8 +1,8 @@
 package main
 
 import (
-	"bank_micro/services/.api-gateway/app"
-	"bank_micro/services/.api-gateway/config"
+	"bank_micro/gateway/config"
+	"bank_micro/gateway/internal/app"
 	"context"
 	"log"
 	"net/http"
