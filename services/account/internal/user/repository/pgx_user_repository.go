@@ -130,7 +130,6 @@ func (r *PgxUserRepository) Delete(id string) (*model.User, error) {
 	return &u, nil
 }
 
-// Deposit + bonus
 func (r *PgxUserRepository) Deposit(userID string, amount int64) error {
 	currentUser, err := r.GetByID(userID, false)
 	if err != nil {
@@ -138,10 +137,7 @@ func (r *PgxUserRepository) Deposit(userID string, amount int64) error {
 	}
 
 	bonusAmount := amount
-	for i := 0; i < 3; i++ { // max 3 level
-		if currentUser == nil {
-			break
-		}
+	for range 2 {
 
 		var updatedBalance int64
 		query := "update accounts set balance = balance + $1 where id = $2 returning balance"
@@ -159,6 +155,10 @@ func (r *PgxUserRepository) Deposit(userID string, amount int64) error {
 		if err != nil {
 			return fmt.Errorf("ref user not found: %w", err)
 		}
+		if currentUser == nil {
+			break
+		}
+
 	}
 
 	return nil
