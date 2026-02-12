@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 type PgxClient struct {
@@ -25,4 +26,8 @@ func (c *PgxClient) QueryRow(sql string, args ...any) pgx.Row {
 
 func (c *PgxClient) Query(sql string, args ...any) (pgx.Rows, error) {
 	return c.Conn.Query(c.Ctx, sql, args...)
+}
+
+func (c *PgxClient) Exec(sql string, args ...any) (pgconn.CommandTag, error) {
+	return c.Conn.Exec(c.Ctx, sql, args...)
 }

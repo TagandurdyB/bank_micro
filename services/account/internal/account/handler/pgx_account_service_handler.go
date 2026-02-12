@@ -19,12 +19,12 @@ func NewPgxAccountHandler(svc *service.PgxAccountService) *PgxAccountHandler {
 }
 
 func (h *PgxAccountHandler) RegisterAccountRoutes(r *gin.Engine) {
-	r.GET("api/account", h.GetAllAccounts)
-	r.GET("api/account/:id", h.GetAccountByID)
-	r.POST("api/account", h.CreateAccount)
-	r.PUT("api/account/:id", h.UpdateAccount)
-	r.DELETE("api/account/:id", h.SoftDeleteAccount)
-	r.PATCH("api/account/:id/balance", h.UpdateBalance)
+	r.GET("/api/account", h.GetAllAccounts)
+	r.GET("/api/account/:id", h.GetAccountByID)
+	r.POST("/api/account", h.CreateAccount)
+	r.PUT("/api/account/:id", h.UpdateAccount)
+	r.DELETE("/api/account/:id", h.SoftDeleteAccount)
+	r.PATCH("/api/account/:id/balance", h.UpdateBalance)
 }
 
 func (h *PgxAccountHandler) GetAllAccounts(c *gin.Context) {

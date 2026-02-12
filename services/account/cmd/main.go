@@ -13,7 +13,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("DB connection error: %v", err)
 	}
-	container, err := InitDependencies(*pgx, config.Cfg.RabbitMQURL)
+	container, err := config.InitDependencies(*pgx, config.Cfg.RabbitMQURL)
 	if err != nil {
 		log.Fatalf("InitDependencies error: %v", err)
 	}
